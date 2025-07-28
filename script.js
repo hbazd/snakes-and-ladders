@@ -5,7 +5,6 @@ const ctx = canvas.getContext("2d");
 let players = [];
 let currentPlayerIndex = 0;
 let gameOver = false;
-const tileSize = 40;
 let isGameStarted = false;
 
 // Snakes and ladders
@@ -18,14 +17,23 @@ const ladders = {
 
 // Responsive canvas sizing
 function resizeCanvas() {
+  console.log("Resizing canvas...");
   const isMobile = window.innerWidth <= 500;
   canvas.width = isMobile ? 300 : 400;
   canvas.height = isMobile ? 300 : 400;
-  if (isGameStarted) drawBoard();
+  if (isGameStarted) {
+    console.log("Drawing board after resize...");
+    drawBoard();
+  }
 }
 
 // Draw the game board
 function drawBoard() {
+  if (!ctx) {
+    console.error("Canvas context not available!");
+    return;
+  }
+  console.log("Drawing board...");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const tileCount = 10;
   const currentTileSize = canvas.width / tileCount;
@@ -196,7 +204,10 @@ function animateMove(player, newPosition, callback) {
 
 // Roll dice and handle game logic
 function rollDice() {
-  if (gameOver || !isGameStarted) return;
+  if (gameOver || !isGameStarted) {
+    console.log("Roll dice blocked: gameOver =", gameOver, "isGameStarted =", isGameStarted);
+    return;
+  }
 
   const roll = Math.floor(Math.random() * 6) + 1;
   const currentPlayer = players[currentPlayerIndex];
@@ -231,16 +242,19 @@ function checkWin() {
     document.getElementById("winMessage").classList.remove("hidden");
     document.getElementById("rollDiceBtn").disabled = true;
     document.getElementById("resetGameBtn").disabled = false;
+    console.log(`Player ${currentPlayer.id} wins!`);
   } else {
     currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
     document.getElementById("playerStatus").innerText = `Player ${players[currentPlayerIndex].id}'s turn`;
     document.getElementById("rollDiceBtn").disabled = false;
+    console.log(`Next turn: Player ${players[currentPlayerIndex].id}`);
   }
   drawBoard();
 }
 
 // Start the game with selected number of players
 function startGame(numPlayers) {
+  console.log(`Starting game with ${numPlayers} player(s)`);
   const colors = ["blue", "red", "green", "purple"];
   players = Array.from({ length: numPlayers }, (_, i) => ({
     id: i + 1,
@@ -251,8 +265,20 @@ function startGame(numPlayers) {
   gameOver = false;
   isGameStarted = true;
 
-  document.getElementById("playerSelection").classList.add("hidden");
-  document.querySelectorAll(".game-section").forEach(el => el.classList.remove("hidden"));
+  const playerSelection = document.getElementById("playerSelection");
+  const gameSections = document.querySelectorAll(".game-section");
+
+  if (!playerSelection || gameSections.length === 0) {
+    console.error("DOM elements not found:", { playerSelection, gameSections });
+    return;
+  }
+
+  playerSelection.classList.add("hidden");
+  gameSections.forEach(el => {
+    el.classList.remove("hidden");
+    console.log("Showing game section:", el);
+  });
+
   document.getElementById("diceResult").innerText = "";
   document.getElementById("playerStatus").innerText = `Player 1's turn`;
   document.getElementById("winMessage").innerText = "";
@@ -265,6 +291,7 @@ function startGame(numPlayers) {
 
 // Reset the game
 function resetGame() {
+  console.log("Resetting game...");
   players = [];
   currentPlayerIndex = 0;
   gameOver = false;
@@ -278,5 +305,16 @@ function resetGame() {
 }
 
 // Initialize
+console.log("Initializing game...");
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
+
+// Keyboard support
+document.addEventListener("keydown", (e) => {
+  console.log("Key pressed:", e.key);
+  if (!isGameStarted && e.key >= "1" && e.key <= "4") {
+    startGame(parseInt(e.key));
+  } else if (e.key === "Enter" && isGameStarted && !gameOver) {
+    rollDice();
+  }
+});
