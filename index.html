@@ -1,15 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Play a fun Snakes and Ladders game with single or multi-player modes.">
   <title>Snakes and Ladders</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Snakes and Ladders</h1>
-  <canvas id="gameCanvas" width="400" height="400"></canvas>
-  <br>
-  <button onclick="rollDice()">Roll Dice</button>
-  <p id="diceResult"></p>
+  <header>
+    <h1>Snakes and Ladders</h1>
+    <p class="instructions">Roll the dice to move your player. Climb ladders to advance, avoid snakes that send you back! First to reach 100 wins.</p>
+  </header>
+  <main>
+    <section aria-label="Game Board">
+      <canvas id="gameCanvas" width="400" height="400" aria-label="Snakes and Ladders game board"></canvas>
+    </section>
+    <section class="controls" aria-label="Game Controls">
+      <div class="game-info">
+        <p id="playerStatus" aria-live="polite">Player 1's turn</p>
+        <p id="diceResult" aria-live="polite"></p>
+        <p id="winMessage" aria-live="assertive" class="hidden"></p>
+      </div>
+      <div class="button-group">
+        <button id="rollDiceBtn" onclick="rollDice()">Roll Dice</button>
+        <button id="resetGameBtn" onclick="resetGame()">Reset Game</button>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2025 Snakes and Ladders. Built with fun!</p>
+  </footer>
   <script src="script.js"></script>
 </body>
 </html>
