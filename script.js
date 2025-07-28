@@ -322,3 +322,126 @@ function rollDice() {
     });
   });
 }
+
+// Check for win condition
+function checkWin() {
+  const currentPlayer = players[currentPlayerIndex];
+  if (currentPlayer.position === 100) {
+    gameOver = true;
+    document.getElementById("winMessage").innerText = `Player ${currentPlayer.id} wins!`;
+    document.getElementById("winMessage").classList.remove("hidden");
+    document.getElementById("rollDiceBtn").disabled = true;
+    document.getElementById("resetGameBtn").disabled = false;
+    console.log(`Player ${currentPlayer.id} wins!`);
+  } else {
+    currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+    document.getElementById("playerStatus").innerText = `Player ${players[currentPlayerIndex].id}'s turn`;
+    document.getElementById("rollDiceBtn").disabled = false;
+    console.log(`Next turn: Player ${players[currentPlayerIndex].id}`);
+  }
+  drawBoard();
+}
+
+// Start the game with selected number of players
+function startGame(numPlayers) {
+  console.log(`Starting game with ${numPlayers} player(s)`);
+  const colors = ["blue", "red", "green", "purple"];
+  players = Array.from({ length: numPlayers }, (_, i) => ({
+    id: i + 1,
+    position: 1,
+    color: colors[i]
+  }));
+  currentPlayerIndex = 0;
+  gameOver = false;
+  isGameStarted = true;
+
+  const playerSelection = document.getElementById("playerSelection");
+  const gameSections = document.querySelectorAll(".game-section");
+
+  if (!playerSelection || gameSections.length === 0) {
+    console.error("DOM elements not found:", { playerSelection, gameSections });
+    return;
+  }
+
+  playerSelection.classList.add("hidden");
+  gameSections.forEach(el => {
+    el.classList.remove("hidden");
+    console.log("Showing game section:", el);
+  });
+
+  document.getElementById("diceResult").innerText = "";
+  document.getElementById("playerStatus").innerText = `Player 1's turn`;
+  document.getElementById("winMessage").innerText = "";
+  document.getElementById("winMessage").classList.add("hidden");
+  document.getElementById("rollDiceBtn").disabled = false;
+  document.getElementById("resetGameBtn").disabled = true;
+
+  drawBoard();
+}
+
+// Reset the game
+function resetGame() {
+  console.log("Resetting game...");
+  players = [];
+  currentPlayerIndex = 0;
+  gameOver = false;
+  isGameStarted = false;
+  document.getElementById("playerSelection").classList.remove("hidden");
+  document.querySelectorAll(".game-section").forEach(el => el.classList.add("hidden"));
+  document.getElementById("diceResult").innerText = "";
+  document.getElementById("playerStatus").innerText = "";
+  document.getElementById("winMessage").innerText = "";
+  document.getElementById("winMessage").classList.add("hidden");
+}
+
+// Initialize
+console.log("Initializing game...");
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+// Bind player selection buttons
+function bindPlayerButtons() {
+  console.log("Attempting to bind player buttons...");
+  const buttons = [
+    { id: "player1Btn", players: 1 },
+    { id: "player2Btn", players: 2 },
+    { id: "player3Btn", players: 3 },
+    { id: "player4Btn", players: 4 }
+  ];
+
+  let allButtonsFound = true;
+  buttons.forEach(({ id, players }) => {
+    const button = document.getElementById(id);
+    if (button) {
+      console.log(`Found button: ${id}`);
+      button.addEventListener("click", () => {
+        console.log(`Button clicked: ${id}, starting game with ${players} player(s)`);
+        startGame(players);
+      });
+    } else {
+      console.error(`Button not found: ${id}`);
+      allButtonsFound = false;
+    }
+  });
+
+  if (!allButtonsFound) {
+    console.warn("Not all buttons were found, retrying in 500ms...");
+    setTimeout(bindPlayerButtons, 500); // Retry binding after delay
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("DOM fully loaded, binding buttons...");
+  bindPlayerButtons();
+});
+
+// Keyboard support
+document.addEventListener("keydown", (e) => {
+  console.log("Key pressed:", e.key);
+  if (!isGameStarted && e.key >= "1" && e.key <= "4") {
+    console.log(`Starting game via keyboard with ${e.key} player(s)`);
+    startGame(parseInt(e.key));
+  } else if (e.key === "Enter" && isGameStarted && !gameOver) {
+    rollDice();
+  }
+});
