@@ -195,7 +195,7 @@ function drawSnakeOrLadder(start, end, type, tileSize) {
     );
     ctx.lineTo(
       endCoord.x - (tileSize / 4) * Math.cos(angleEnd + Math.PI / 6),
-      endCoord.y - (tileSize / 4) * Math.sin(angleEnd - Math.PI / 6)
+      endCoord.y - (tileSize / 4) * Math.sin(angleEnd + Math.PI / 6)
     );
     ctx.closePath();
     ctx.fillStyle = "green";
@@ -220,6 +220,7 @@ function drawPlayers() {
 
 // Draw dice face
 function drawDiceFace(number, x, y, size) {
+  console.log(`Drawing dice face ${number} at x: ${x}, y: ${y}`);
   ctx.fillStyle = "#fff";
   ctx.strokeStyle = "#2c3e50";
   ctx.lineWidth = 2;
@@ -251,10 +252,12 @@ function drawDiceFace(number, x, y, size) {
 function animateDiceRoll(finalNumber, callback) {
   const currentTileSize = canvas.width / 10;
   const diceSize = canvas.width / 4;
-  const x = canvas.width / 2 - diceSize / 2;
-  const y = canvas.height / 2 - diceSize / 2;
+  const x = currentTileSize / 2; // Position dice on left side
+  const y = canvas.height / 2 - diceSize / 2; // Center vertically
   let frame = 0;
   const totalFrames = 20; // ~1 second at 20fps
+
+  console.log(`Starting dice roll animation at x: ${x}, y: ${y}`);
 
   function animate() {
     drawBoard(); // Redraw board to clear previous dice
@@ -277,10 +280,13 @@ function animateDiceRoll(finalNumber, callback) {
 
 // Animate player movement
 function animateMove(player, newPosition, callback) {
-  const steps = 10;
+  const steps = 20; // Increased steps for slower animation
+  const frameDelay = 50; // 50ms delay per frame, ~1s total
   const startPos = player.position;
   const endPos = newPosition;
   let step = 0;
+
+  console.log(`Animating player ${player.id} from position ${startPos} to ${endPos}`);
 
   function animate() {
     step++;
@@ -288,9 +294,10 @@ function animateMove(player, newPosition, callback) {
     player.position = Math.round(startPos + (endPos - startPos) * progress);
     drawBoard();
     if (step < steps) {
-      requestAnimationFrame(animate);
+      setTimeout(() => requestAnimationFrame(animate), frameDelay);
     } else {
       player.position = endPos;
+      console.log(`Player ${player.id} reached position ${endPos}`);
       callback();
     }
   }
