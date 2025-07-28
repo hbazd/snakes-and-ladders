@@ -13,10 +13,19 @@
     <p class="instructions">Roll the dice to move your player. Climb ladders to advance, avoid snakes that send you back! First to reach 100 wins.</p>
   </header>
   <main>
-    <section aria-label="Game Board">
-      <canvas id="gameCanvas" width="400" height="400" aria-label="Snakes and Ladders game board"></canvas>
+    <section aria-label="Player Selection" id="playerSelection">
+      <h2>Choose Number of Players</h2>
+      <div class="player-select">
+        <button onclick="startGame(1)">1 Player</button>
+        <button onclick="startGame(2)">2 Players</button>
+        <button onclick="startGame(3)">3 Players</button>
+        <button onclick="startGame(4)">4 Players</button>
+      </div>
     </section>
-    <section class="controls" aria-label="Game Controls">
+    <section aria-label="Game Board" class="game-section hidden">
+      <canvas id="gameCanvas" width="400" height="400" aria-label="Snakes and Ladders game board and dice"></canvas>
+    </section>
+    <section class="controls game-section hidden" aria-label="Game Controls">
       <div class="game-info">
         <p id="playerStatus" aria-live="polite">Player 1's turn</p>
         <p id="diceResult" aria-live="polite"></p>
