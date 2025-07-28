@@ -56,7 +56,7 @@ function drawBoard() {
       gameCtx.strokeRect(x, y, currentTileSize, currentTileSize);
       gameCtx.fillStyle = "#34495e";
       gameCtx.fillText(number, x + 5, y + 5);
-      console.log(`Drawing number ${number} at row ${tileCount - 1 - row}, col ${isLeftToRight ? col : tileCount - 1 - col}, x: ${x}, y: ${y}`);
+      console.log(`Drawing number ${number} at visual row ${tileCount - 1 - row}, col ${isLeftToRight ? col : tileCount - 1 - col}, x: ${x}, y: ${y}`);
       number++;
     }
   }
@@ -68,12 +68,12 @@ function drawBoard() {
 function getTileCenter(position) {
   const tileCount = 10;
   const currentTileSize = gameCanvas.width / tileCount;
-  // Calculate visual row (0 at bottom, 9 at top) and column based on position
-  const visualRow = Math.floor((100 - position) / tileCount); // Visual row from bottom
-  const row = tileCount - 1 - visualRow; // Canvas row (0 at top, 9 at bottom)
-  const isLeftToRight = visualRow % 2 === 0; // Bottom row (visualRow 0) is left-to-right
-  const colIndex = (position - 1) % tileCount; // Column index in row
-  const finalCol = isLeftToRight ? colIndex : tileCount - 1 - colIndex; // Adjust for direction
+  // Calculate canvas row (0 at top, 9 at bottom) and column
+  const row = tileCount - 1 - Math.floor((position - 1) / tileCount); // Canvas row (9 for pos 1)
+  const visualRow = tileCount - 1 - row; // Visual row (0 for bottom)
+  const col = (position - 1) % tileCount; // Column index (0-9)
+  const isLeftToRight = visualRow % 2 === 0; // Visual row 0 (bottom) is left-to-right
+  const finalCol = isLeftToRight ? col : tileCount - 1 - col; // Adjust for direction
   const x = finalCol * currentTileSize + currentTileSize / 2;
   const y = row * currentTileSize + currentTileSize / 2;
   console.log(`Position ${position} maps to visual row ${visualRow}, col ${finalCol}, x: ${x}, y: ${y}`);
