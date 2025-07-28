@@ -81,16 +81,17 @@ function drawSnakesAndLadders() {
   });
 }
 
-// Draw a snake (wavy line) or ladder (parallel lines with rungs)
+// Draw a snake (wavy line with head and scales) or ladder (parallel lines with rungs)
 function drawSnakeOrLadder(start, end, type, tileSize) {
   const startCoord = getTileCenter(start);
   const endCoord = getTileCenter(end);
-  ctx.beginPath();
   ctx.strokeStyle = type === "snake" ? "red" : "green";
   ctx.lineWidth = tileSize / 10;
 
   if (type === "snake") {
-    // Draw wavy snake path using quadratic Bezier curves
+    // Draw wavy snake path with scale-like dashes
+    ctx.beginPath();
+    ctx.setLineDash([tileSize / 8, tileSize / 8]); // Dash pattern for scales
     ctx.moveTo(startCoord.x, startCoord.y);
     const dx = endCoord.x - startCoord.x;
     const dy = endCoord.y - startCoord.y;
@@ -106,21 +107,43 @@ function drawSnakeOrLadder(start, end, type, tileSize) {
       ctx.quadraticCurveTo(controlX, controlY, x, y);
     }
     ctx.stroke();
+    ctx.setLineDash([]); // Reset dash pattern
 
-    // Draw arrowhead at the end (downward)
-    const angle = Math.atan2(endCoord.y - startCoord.y, endCoord.x - startCoord.x);
+    // Draw snake head (triangle with eyes)
+    const angle = Math.atan2(endCoord.y - startCoord.x, endCoord.x - startCoord.x);
     ctx.beginPath();
     ctx.moveTo(endCoord.x, endCoord.y);
     ctx.lineTo(
-      endCoord.x - (tileSize / 4) * Math.cos(angle - Math.PI / 6),
-      endCoord.y - (tileSize / 4) * Math.sin(angle - Math.PI / 6)
+      endCoord.x - (tileSize / 3) * Math.cos(angle - Math.PI / 6),
+      endCoord.y - (tileSize / 3) * Math.sin(angle - Math.PI / 6)
     );
-    ctx.moveTo(endCoord.x, endCoord.y);
     ctx.lineTo(
-      endCoord.x - (tileSize / 4) * Math.cos(angle + Math.PI / 6),
-      endCoord.y - (tileSize / 4) * Math.sin(angle + Math.PI / 6)
+      endCoord.x - (tileSize / 3) * Math.cos(angle + Math.PI / 6),
+      endCoord.y - (tileSize / 3) * Math.sin(angle + Math.PI / 6)
     );
-    ctx.stroke();
+    ctx.closePath();
+    ctx.fillStyle = "red";
+    ctx.fill();
+
+    // Draw eyes
+    const eyeOffset = tileSize / 8;
+    ctx.beginPath();
+    ctx.arc(
+      endCoord.x - (tileSize / 4) * Math.cos(angle - Math.PI / 6),
+      endCoord.y - (tileSize / 4) * Math.sin(angle - Math.PI / 6),
+      tileSize / 20,
+      0,
+      Math.PI * 2
+    );
+    ctx.arc(
+      endCoord.x - (tileSize / 4) * Math.cos(angle + Math.PI / 6),
+      endCoord.y - (tileSize / 4) * Math.sin(angle + Math.PI / 6),
+      tileSize / 20,
+      0,
+      Math.PI * 2
+    );
+    ctx.fillStyle = "white";
+    ctx.fill();
   } else {
     // Draw ladder with two parallel lines and rungs
     const offset = tileSize / 8; // Distance between parallel lines
@@ -131,18 +154,22 @@ function drawSnakeOrLadder(start, end, type, tileSize) {
     const offsetX = offset * Math.cos(perpAngle);
     const offsetY = offset * Math.sin(perpAngle);
 
-    // Draw two parallel lines
+    // Draw two parallel lines with shadow effect
     ctx.beginPath();
     ctx.moveTo(startCoord.x + offsetX, startCoord.y + offsetY);
     ctx.lineTo(endCoord.x + offsetX, endCoord.y + offsetY);
+    ctx.strokeStyle = "green";
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(startCoord.x - offsetX, startCoord.y - offsetY);
     ctx.lineTo(endCoord.x - offsetX, endCoord.y - offsetY);
+    ctx.strokeStyle = "#004d00"; // Darker green for shadow effect
     ctx.stroke();
 
-    // Draw rungs (5 evenly spaced)
+    // Draw rungs (5 evenly spaced, thicker for wooden effect)
     const rungCount = 5;
+    ctx.strokeStyle = "green";
+    ctx.lineWidth = tileSize / 15;
     for (let i = 1; i < rungCount; i++) {
       const t = i / rungCount;
       const rungX = startCoord.x + dx * t;
@@ -161,12 +188,13 @@ function drawSnakeOrLadder(start, end, type, tileSize) {
       endCoord.x - (tileSize / 4) * Math.cos(angleEnd - Math.PI / 6),
       endCoord.y - (tileSize / 4) * Math.sin(angleEnd - Math.PI / 6)
     );
-    ctx.moveTo(endCoord.x, endCoord.y);
     ctx.lineTo(
       endCoord.x - (tileSize / 4) * Math.cos(angleEnd + Math.PI / 6),
       endCoord.y - (tileSize / 4) * Math.sin(angleEnd + Math.PI / 6)
     );
-    ctx.stroke();
+    ctx.closePath();
+    ctx.fillStyle = "green";
+    ctx.fill();
   }
 }
 
@@ -371,15 +399,30 @@ console.log("Initializing game...");
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
+// Bind player selection buttons
+document.getElementById("player1Btn").addEventListener("click", () => {
+  console.log("Player 1 button clicked");
+  startGame(1);
+});
+document.getElementById("player2Btn").addEventListener("click", () => {
+  console.log("Player 2 button clicked");
+  startGame(2);
+});
+document.getElementById("player3Btn").addEventListener("click", () => {
+  console.log("Player 3 button clicked");
+  startGame(3);
+});
+document.getElementById("player4Btn").addEventListener("click", () => {
+  console.log("Player 4 button clicked");
+  startGame(4);
+});
+
 // Keyboard support
 document.addEventListener("keydown", (e) => {
   console.log("Key pressed:", e.key);
   if (!isGameStarted && e.key >= "1" && e.key <= "4") {
     startGame(parseInt(e.key));
   } else if (e.key === "Enter" && isGameStarted && !gameOver) {
-    rollDice();
-  }
-});
     rollDice();
   }
 });
