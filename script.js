@@ -74,38 +74,100 @@ function getTileCenter(position) {
 function drawSnakesAndLadders() {
   const currentTileSize = canvas.width / 10;
   Object.entries(snakes).forEach(([start, end]) => {
-    drawArrow(parseInt(start), parseInt(end), "red", currentTileSize);
+    drawSnakeOrLadder(parseInt(start), parseInt(end), "snake", currentTileSize);
   });
   Object.entries(ladders).forEach(([start, end]) => {
-    drawArrow(parseInt(start), parseInt(end), "green", currentTileSize);
+    drawSnakeOrLadder(parseInt(start), parseInt(end), "ladder", currentTileSize);
   });
 }
 
-// Draw an arrow between two tiles
-function drawArrow(start, end, color, tileSize) {
+// Draw a snake (wavy line) or ladder (parallel lines with rungs)
+function drawSnakeOrLadder(start, end, type, tileSize) {
   const startCoord = getTileCenter(start);
   const endCoord = getTileCenter(end);
   ctx.beginPath();
-  ctx.moveTo(startCoord.x, startCoord.y);
-  ctx.lineTo(endCoord.x, endCoord.y);
-  ctx.strokeStyle = color;
+  ctx.strokeStyle = type === "snake" ? "red" : "green";
   ctx.lineWidth = tileSize / 10;
-  ctx.stroke();
 
-  // Draw arrowhead
-  const angle = Math.atan2(endCoord.y - startCoord.y, endCoord.x - startCoord.x);
-  ctx.beginPath();
-  ctx.moveTo(endCoord.x, endCoord.y);
-  ctx.lineTo(
-    endCoord.x - (tileSize / 4) * Math.cos(angle - Math.PI / 6),
-    endCoord.y - (tileSize / 4) * Math.sin(angle - Math.PI / 6)
-  );
-  ctx.moveTo(endCoord.x, endCoord.y);
-  ctx.lineTo(
-    endCoord.x - (tileSize / 4) * Math.cos(angle + Math.PI / 6),
-    endCoord.y - (tileSize / 4) * Math.sin(angle + Math.PI / 6)
-  );
-  ctx.stroke();
+  if (type === "snake") {
+    // Draw wavy snake path using quadratic Bezier curves
+    ctx.moveTo(startCoord.x, startCoord.y);
+    const dx = endCoord.x - startCoord.x;
+    const dy = endCoord.y - startCoord.y;
+    const segments = 5;
+    const waveAmplitude = tileSize / 2;
+    for (let i = 1; i <= segments; i++) {
+      const t = i / segments;
+      const prevT = (i - 1) / segments;
+      const x = startCoord.x + dx * t;
+      const y = startCoord.y + dy * t + waveAmplitude * Math.sin(t * Math.PI * 2);
+      const controlX = startCoord.x + dx * prevT;
+      const controlY = startCoord.y + dy * prevT + waveAmplitude * Math.sin(prevT * Math.PI * 2);
+      ctx.quadraticCurveTo(controlX, controlY, x, y);
+    }
+    ctx.stroke();
+
+    // Draw arrowhead at the end (downward)
+    const angle = Math.atan2(endCoord.y - startCoord.y, endCoord.x - startCoord.x);
+    ctx.beginPath();
+    ctx.moveTo(endCoord.x, endCoord.y);
+    ctx.lineTo(
+      endCoord.x - (tileSize / 4) * Math.cos(angle - Math.PI / 6),
+      endCoord.y - (tileSize / 4) * Math.sin(angle - Math.PI / 6)
+    );
+    ctx.moveTo(endCoord.x, endCoord.y);
+    ctx.lineTo(
+      endCoord.x - (tileSize / 4) * Math.cos(angle + Math.PI / 6),
+      endCoord.y - (tileSize / 4) * Math.sin(angle + Math.PI / 6)
+    );
+    ctx.stroke();
+  } else {
+    // Draw ladder with two parallel lines and rungs
+    const offset = tileSize / 8; // Distance between parallel lines
+    const dx = endCoord.x - startCoord.x;
+    const dy = endCoord.y - startCoord.y;
+    const angle = Math.atan2(dy, dx);
+    const perpAngle = angle + Math.PI / 2;
+    const offsetX = offset * Math.cos(perpAngle);
+    const offsetY = offset * Math.sin(perpAngle);
+
+    // Draw two parallel lines
+    ctx.beginPath();
+    ctx.moveTo(startCoord.x + offsetX, startCoord.y + offsetY);
+    ctx.lineTo(endCoord.x + offsetX, endCoord.y + offsetY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(startCoord.x - offsetX, startCoord.y - offsetY);
+    ctx.lineTo(endCoord.x - offsetX, endCoord.y - offsetY);
+    ctx.stroke();
+
+    // Draw rungs (5 evenly spaced)
+    const rungCount = 5;
+    for (let i = 1; i < rungCount; i++) {
+      const t = i / rungCount;
+      const rungX = startCoord.x + dx * t;
+      const rungY = startCoord.y + dy * t;
+      ctx.beginPath();
+      ctx.moveTo(rungX + offsetX, rungY + offsetY);
+      ctx.lineTo(rungX - offsetX, rungY - offsetY);
+      ctx.stroke();
+    }
+
+    // Draw arrowhead at the end (upward)
+    const angleEnd = Math.atan2(endCoord.y - startCoord.y, endCoord.x - startCoord.x);
+    ctx.beginPath();
+    ctx.moveTo(endCoord.x, endCoord.y);
+    ctx.lineTo(
+      endCoord.x - (tileSize / 4) * Math.cos(angleEnd - Math.PI / 6),
+      endCoord.y - (tileSize / 4) * Math.sin(angleEnd - Math.PI / 6)
+    );
+    ctx.moveTo(endCoord.x, endCoord.y);
+    ctx.lineTo(
+      endCoord.x - (tileSize / 4) * Math.cos(angleEnd + Math.PI / 6),
+      endCoord.y - (tileSize / 4) * Math.sin(angleEnd + Math.PI / 6)
+    );
+    ctx.stroke();
+  }
 }
 
 // Draw all players
@@ -315,6 +377,9 @@ document.addEventListener("keydown", (e) => {
   if (!isGameStarted && e.key >= "1" && e.key <= "4") {
     startGame(parseInt(e.key));
   } else if (e.key === "Enter" && isGameStarted && !gameOver) {
+    rollDice();
+  }
+});
     rollDice();
   }
 });
