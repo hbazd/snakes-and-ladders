@@ -68,11 +68,12 @@ function drawBoard() {
 function getTileCenter(position) {
   const tileCount = 10;
   const currentTileSize = gameCanvas.width / tileCount;
-  const row = Math.floor((position - 1) / tileCount); // Internal row (0 at bottom)
-  const col = (position - 1) % tileCount;
-  const visualRow = tileCount - 1 - row; // Visual row (0 at bottom, 9 at top)
+  // Calculate visual row (0 at bottom, 9 at top) and column based on position
+  const visualRow = Math.floor((100 - position) / tileCount); // Visual row from bottom
+  const row = tileCount - 1 - visualRow; // Canvas row (0 at top, 9 at bottom)
   const isLeftToRight = visualRow % 2 === 0; // Bottom row (visualRow 0) is left-to-right
-  const finalCol = isLeftToRight ? col : tileCount - 1 - col;
+  const colIndex = (position - 1) % tileCount; // Column index in row
+  const finalCol = isLeftToRight ? colIndex : tileCount - 1 - colIndex; // Adjust for direction
   const x = finalCol * currentTileSize + currentTileSize / 2;
   const y = row * currentTileSize + currentTileSize / 2;
   console.log(`Position ${position} maps to visual row ${visualRow}, col ${finalCol}, x: ${x}, y: ${y}`);
