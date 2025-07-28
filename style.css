@@ -1,9 +1,121 @@
+/* style.css */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', Arial, sans-serif;
   text-align: center;
   background-color: #f0f8ff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+header {
+  margin-bottom: 20px;
+}
+
+h1 {
+  color: #2c3e50;
+  font-size: 2.5em;
+  margin-bottom: 10px;
+}
+
+.instructions {
+  color: #34495e;
+  font-size: 1.1em;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 canvas {
-  border: 2px solid #000;
+  border: 2px solid #2c3e50;
+  background-color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  margin-bottom: 20px;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.game-info {
+  min-height: 60px;
+}
+
+.game-info p {
+  font-size: 1.2em;
+  color: #34495e;
+  margin: 5px 0;
+}
+
+#winMessage {
+  font-weight: bold;
+  color: #27ae60;
+}
+
+.hidden {
+  display: none;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 1.1em;
+  background-color: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.1s;
+}
+
+button:hover {
+  background-color: #2980b9;
+  transform: scale(1.05);
+}
+
+button:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+footer {
+  margin-top: 20px;
+  color: #7f8c8d;
+  font-size: 0.9em;
+}
+
+/* Responsive Design */
+@media (max-width: 500px) {
+  canvas {
+    width: 300px;
+    height: 300px;
+  }
+
+  h1 {
+    font-size: 2em;
+  }
+
+  .instructions {
+    font-size: 1em;
+    padding: 0 10px;
+  }
+
+  button {
+    padding: 8px 16px;
+    font-size: 1em;
+  }
 }
