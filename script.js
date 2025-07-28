@@ -44,13 +44,15 @@ function drawBoard() {
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
   for (let row = tileCount - 1; row >= 0; row--) {
+    const isLeftToRight = (tileCount - 1 - row) % 2 === 0; // Visual row 0 (bottom) is left-to-right
     for (let col = 0; col < tileCount; col++) {
-      const x = (row % 2 === 0) ? col * currentTileSize : (tileCount - 1 - col) * currentTileSize;
+      const x = isLeftToRight ? col * currentTileSize : (tileCount - 1 - col) * currentTileSize;
       const y = row * currentTileSize;
       ctx.strokeStyle = "#2c3e50";
       ctx.strokeRect(x, y, currentTileSize, currentTileSize);
       ctx.fillStyle = "#34495e";
       ctx.fillText(number, x + 5, y + 5);
+      console.log(`Drawing number ${number} at row ${tileCount - 1 - row}, col ${isLeftToRight ? col : tileCount - 1 - col}, x: ${x}, y: ${y}`);
       number++;
     }
   }
@@ -64,9 +66,12 @@ function getTileCenter(position) {
   const currentTileSize = canvas.width / tileCount;
   let row = Math.floor((position - 1) / tileCount);
   let col = (position - 1) % tileCount;
-  if (row % 2 === 1) col = tileCount - 1 - col;
+  const visualRow = tileCount - 1 - row; // Convert to visual row (0 at bottom)
+  const isLeftToRight = visualRow % 2 === 0; // Bottom row (visualRow 0) is left-to-right
+  if (!isLeftToRight) col = tileCount - 1 - col;
   const x = col * currentTileSize + currentTileSize / 2;
-  const y = (tileCount - 1 - row) * currentTileSize + currentTileSize / 2;
+  const y = row * currentTileSize + currentTileSize / 2;
+  console.log(`Position ${position} maps to row ${visualRow}, col ${col}, x: ${x}, y: ${y}`);
   return { x, y };
 }
 
@@ -190,7 +195,7 @@ function drawSnakeOrLadder(start, end, type, tileSize) {
     );
     ctx.lineTo(
       endCoord.x - (tileSize / 4) * Math.cos(angleEnd + Math.PI / 6),
-      endCoord.y - (tileSize / 4) * Math.sin(angleEnd + Math.PI / 6)
+      endCoord.y - (tileSize / 4) * Math.sin(angleEnd - Math.PI / 6)
     );
     ctx.closePath();
     ctx.fillStyle = "green";
