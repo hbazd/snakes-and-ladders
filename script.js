@@ -2,13 +2,11 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
 // Game state
-let players = [
-  { id: 1, position: 1, color: "blue" },
-  { id: 2, position: 1, color: "red" }
-];
+let players = [];
 let currentPlayerIndex = 0;
 let gameOver = false;
 const tileSize = 40;
+let isGameStarted = false;
 
 // Snakes and ladders
 const snakes = {
@@ -23,7 +21,7 @@ function resizeCanvas() {
   const isMobile = window.innerWidth <= 500;
   canvas.width = isMobile ? 300 : 400;
   canvas.height = isMobile ? 300 : 400;
-  drawBoard();
+  if (isGameStarted) drawBoard();
 }
 
 // Draw the game board
@@ -117,6 +115,63 @@ function drawPlayers() {
   });
 }
 
+// Draw dice face
+function drawDiceFace(number, x, y, size) {
+  ctx.fillStyle = "#fff";
+  ctx.strokeStyle = "#2c3e50";
+  ctx.lineWidth = 2;
+  ctx.fillRect(x, y, size, size);
+  ctx.strokeRect(x, y, size, size);
+
+  const dotSize = size / 10;
+  const offset = size / 4;
+  ctx.fillStyle = "#2c3e50";
+
+  const positions = [
+    [], // 0 (not used)
+    [[0.5, 0.5]], // 1
+    [[0.25, 0.25], [0.75, 0.75]], // 2
+    [[0.25, 0.25], [0.5, 0.5], [0.75, 0.75]], // 3
+    [[0.25, 0.25], [0.25, 0.75], [0.75, 0.25], [0.75, 0.75]], // 4
+    [[0.25, 0.25], [0.25, 0.75], [0.5, 0.5], [0.75, 0.25], [0.75, 0.75]], // 5
+    [[0.25, 0.25], [0.25, 0.5], [0.25, 0.75], [0.75, 0.25], [0.75, 0.5], [0.75, 0.75]] // 6
+  ];
+
+  positions[number].forEach(([dx, dy]) => {
+    ctx.beginPath();
+    ctx.arc(x + dx * size, y + dy * size, dotSize, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+// Animate dice roll
+function animateDiceRoll(finalNumber, callback) {
+  const currentTileSize = canvas.width / 10;
+  const diceSize = canvas.width / 4;
+  const x = canvas.width / 2 - diceSize / 2;
+  const y = canvas.height / 2 - diceSize / 2;
+  let frame = 0;
+  const totalFrames = 20; // ~1 second at 20fps
+
+  function animate() {
+    drawBoard(); // Redraw board to clear previous dice
+    const randomFace = Math.floor(Math.random() * 6) + 1;
+    drawDiceFace(randomFace, x, y, diceSize);
+    frame++;
+    if (frame < totalFrames) {
+      setTimeout(() => requestAnimationFrame(animate), 50);
+    } else {
+      drawBoard();
+      drawDiceFace(finalNumber, x, y, diceSize);
+      setTimeout(() => {
+        drawBoard();
+        callback();
+      }, 500); // Show final face for 0.5s before clearing
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
 // Animate player movement
 function animateMove(player, newPosition, callback) {
   const steps = 10;
@@ -141,27 +196,29 @@ function animateMove(player, newPosition, callback) {
 
 // Roll dice and handle game logic
 function rollDice() {
-  if (gameOver) return;
+  if (gameOver || !isGameStarted) return;
 
   const roll = Math.floor(Math.random() * 6) + 1;
   const currentPlayer = players[currentPlayerIndex];
   document.getElementById("diceResult").innerText = `Player ${currentPlayer.id} rolled: ${roll}`;
   document.getElementById("rollDiceBtn").disabled = true;
 
-  let newPosition = currentPlayer.position + roll;
-  if (newPosition > 100) newPosition = 100;
+  animateDiceRoll(roll, () => {
+    let newPosition = currentPlayer.position + roll;
+    if (newPosition > 100) newPosition = 100;
 
-  animateMove(currentPlayer, newPosition, () => {
-    // Check for snakes or ladders
-    if (snakes[newPosition]) {
-      document.getElementById("playerStatus").innerText = `Player ${currentPlayer.id} hit a snake! Sliding to ${snakes[newPosition]}.`;
-      animateMove(currentPlayer, snakes[newPosition], checkWin);
-    } else if (ladders[newPosition]) {
-      document.getElementById("playerStatus").innerText = `Player ${currentPlayer.id} climbed a ladder to ${ladders[newPosition]}!`;
-      animateMove(currentPlayer, ladders[newPosition], checkWin);
-    } else {
-      checkWin();
-    }
+    animateMove(currentPlayer, newPosition, () => {
+      // Check for snakes or ladders
+      if (snakes[newPosition]) {
+        document.getElementById("playerStatus").innerText = `Player ${currentPlayer.id} hit a snake! Sliding to ${snakes[newPosition]}.`;
+        animateMove(currentPlayer, snakes[newPosition], checkWin);
+      } else if (ladders[newPosition]) {
+        document.getElementById("playerStatus").innerText = `Player ${currentPlayer.id} climbed a ladder to ${ladders[newPosition]}!`;
+        animateMove(currentPlayer, ladders[newPosition], checkWin);
+      } else {
+        checkWin();
+      }
+    });
   });
 }
 
@@ -182,24 +239,44 @@ function checkWin() {
   drawBoard();
 }
 
-// Reset the game
-function resetGame() {
-  players = [
-    { id: 1, position: 1, color: "blue" },
-    { id: 2, position: 1, color: "red" }
-  ];
+// Start the game with selected number of players
+function startGame(numPlayers) {
+  const colors = ["blue", "red", "green", "purple"];
+  players = Array.from({ length: numPlayers }, (_, i) => ({
+    id: i + 1,
+    position: 1,
+    color: colors[i]
+  }));
   currentPlayerIndex = 0;
   gameOver = false;
+  isGameStarted = true;
+
+  document.getElementById("playerSelection").classList.add("hidden");
+  document.querySelectorAll(".game-section").forEach(el => el.classList.remove("hidden"));
   document.getElementById("diceResult").innerText = "";
-  document.getElementById("playerStatus").innerText = "Player 1's turn";
+  document.getElementById("playerStatus").innerText = `Player 1's turn`;
   document.getElementById("winMessage").innerText = "";
   document.getElementById("winMessage").classList.add("hidden");
   document.getElementById("rollDiceBtn").disabled = false;
   document.getElementById("resetGameBtn").disabled = true;
+
   drawBoard();
+}
+
+// Reset the game
+function resetGame() {
+  players = [];
+  currentPlayerIndex = 0;
+  gameOver = false;
+  isGameStarted = false;
+  document.getElementById("playerSelection").classList.remove("hidden");
+  document.querySelectorAll(".game-section").forEach(el => el.classList.add("hidden"));
+  document.getElementById("diceResult").innerText = "";
+  document.getElementById("playerStatus").innerText = "";
+  document.getElementById("winMessage").innerText = "";
+  document.getElementById("winMessage").classList.add("hidden");
 }
 
 // Initialize
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
-document.getElementById("resetGameBtn").disabled = true;
