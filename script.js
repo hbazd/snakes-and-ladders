@@ -19,14 +19,14 @@ const ladders = {
 
 // Load snake image
 const snakeImage = new Image();
-snakeImage.src = 'snake.png'; // Adjust path if needed
+snakeImage.src = 'snake.png'; // Update this path if your image is named differently or in a subdirectory (e.g., 'images/snake.png' or 'mysnake.jpg')
 let snakeImageLoaded = false;
 snakeImage.onload = () => {
-  console.log("Snake image loaded successfully");
+  console.log(`Snake image loaded successfully from ${snakeImage.src}`);
   snakeImageLoaded = true;
 };
 snakeImage.onerror = () => {
-  console.error("Failed to load snake image at 'snake.png'");
+  console.error(`Failed to load snake image at '${snakeImage.src}'. Check file name, path, and server accessibility.`);
 };
 
 // Responsive canvas sizing
@@ -130,7 +130,7 @@ function drawSnakeOrLadder(start, end, type, tileSize) {
       console.log(`Drawing snake image from ${start} to ${end}, length: ${length}, angle: ${angle}`);
     } else {
       // Fallback: Draw red line if image fails to load
-      console.warn(`Snake image not loaded, drawing fallback line for ${start}→${end}`);
+      console.warn(`Snake image not loaded, drawing fallback red line for ${start}→${end}`);
       gameCtx.strokeStyle = "red";
       gameCtx.lineWidth = tileSize / 10;
       gameCtx.beginPath();
