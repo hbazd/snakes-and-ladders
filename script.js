@@ -17,6 +17,18 @@ const ladders = {
   1: 38, 4: 14, 9: 31, 21: 42, 28: 84, 36: 44, 51: 67, 71: 91, 80: 100
 };
 
+// Load snake image
+const snakeImage = new Image();
+snakeImage.src = 'snake.png'; // Adjust path if needed
+let snakeImageLoaded = false;
+snakeImage.onload = () => {
+  console.log("Snake image loaded successfully");
+  snakeImageLoaded = true;
+};
+snakeImage.onerror = () => {
+  console.error("Failed to load snake image at 'snake.png'");
+};
+
 // Responsive canvas sizing
 function resizeCanvas() {
   console.log("Resizing canvases...");
@@ -48,7 +60,8 @@ function drawBoard() {
   gameCtx.textAlign = "left";
   gameCtx.textBaseline = "top";
   for (let row = tileCount - 1; row >= 0; row--) {
-    const isLeftToRight = (tileCount - 1 - row) % 2 === 0; // Visual row 0 (bottom) is left-to-right
+    const visualRow = tileCount - 1 - row; // Visual row 0 is bottom
+    const isLeftToRight = visualRow % 2 === 0; // Visual row 0 (bottom) is left-to-right
     for (let col = 0; col < tileCount; col++) {
       const x = isLeftToRight ? col * currentTileSize : (tileCount - 1 - col) * currentTileSize;
       const y = row * currentTileSize;
@@ -56,7 +69,7 @@ function drawBoard() {
       gameCtx.strokeRect(x, y, currentTileSize, currentTileSize);
       gameCtx.fillStyle = "#34495e";
       gameCtx.fillText(number, x + 5, y + 5);
-      console.log(`Drawing number ${number} at visual row ${tileCount - 1 - row}, col ${isLeftToRight ? col : tileCount - 1 - col}, x: ${x}, y: ${y}`);
+      console.log(`Drawing number ${number} at visual row ${visualRow}, col ${isLeftToRight ? col : tileCount - 1 - col}, x: ${x}, y: ${y}`);
       number++;
     }
   }
@@ -68,9 +81,9 @@ function drawBoard() {
 function getTileCenter(position) {
   const tileCount = 10;
   const currentTileSize = gameCanvas.width / tileCount;
-  // Calculate canvas row (0 at top, 9 at bottom) and column
-  const row = tileCount - 1 - Math.floor((position - 1) / tileCount); // Canvas row (9 for pos 1)
-  const visualRow = tileCount - 1 - row; // Visual row (0 for bottom)
+  // Calculate visual row (0 at bottom, 9 at top) and column
+  const visualRow = Math.floor((position - 1) / tileCount); // 0 for pos 1-10, 1 for 11-20, etc.
+  const row = tileCount - 1 - visualRow; // Canvas row (9 for bottom, 0 for top)
   const col = (position - 1) % tileCount; // Column index (0-9)
   const isLeftToRight = visualRow % 2 === 0; // Visual row 0 (bottom) is left-to-right
   const finalCol = isLeftToRight ? col : tileCount - 1 - col; // Adjust for direction
@@ -91,71 +104,44 @@ function drawSnakesAndLadders() {
   });
 }
 
-// Draw a snake (wavy line with head and scales) or ladder (parallel lines with rungs)
+// Draw a snake (using image) or ladder (parallel lines with rungs)
 function drawSnakeOrLadder(start, end, type, tileSize) {
   const startCoord = getTileCenter(start);
   const endCoord = getTileCenter(end);
-  gameCtx.strokeStyle = type === "snake" ? "red" : "green";
-  gameCtx.lineWidth = tileSize / 10;
+  gameCtx.save();
 
   if (type === "snake") {
-    // Draw wavy snake path with scale-like dashes
-    gameCtx.beginPath();
-    gameCtx.setLineDash([tileSize / 8, tileSize / 8]); // Dash pattern for scales
-    gameCtx.moveTo(startCoord.x, startCoord.y);
-    const dx = endCoord.x - startCoord.x;
-    const dy = endCoord.y - startCoord.y;
-    const segments = 5;
-    const waveAmplitude = tileSize / 2;
-    for (let i = 1; i <= segments; i++) {
-      const t = i / segments;
-      const prevT = (i - 1) / segments;
-      const x = startCoord.x + dx * t;
-      const y = startCoord.y + dy * t + waveAmplitude * Math.sin(t * Math.PI * 2);
-      const controlX = startCoord.x + dx * prevT;
-      const controlY = startCoord.y + dy * prevT + waveAmplitude * Math.sin(prevT * Math.PI * 2);
-      gameCtx.quadraticCurveTo(controlX, controlY, x, y);
+    if (snakeImageLoaded) {
+      // Calculate path dimensions
+      const dx = endCoord.x - startCoord.x;
+      const dy = endCoord.y - startCoord.y;
+      const length = Math.sqrt(dx * dx + dy * dy);
+      const angle = Math.atan2(dy, dx);
+
+      // Save context and transform
+      gameCtx.translate(startCoord.x, startCoord.y);
+      gameCtx.rotate(angle);
+
+      // Draw snake image stretched along the path
+      const snakeWidth = tileSize / 2; // Adjust based on tile size
+      const aspectRatio = snakeImage.height / snakeImage.width;
+      const snakeHeight = length * aspectRatio;
+      gameCtx.drawImage(snakeImage, 0, -snakeWidth / 2, length, snakeWidth);
+      console.log(`Drawing snake image from ${start} to ${end}, length: ${length}, angle: ${angle}`);
+    } else {
+      // Fallback: Draw red line if image fails to load
+      console.warn(`Snake image not loaded, drawing fallback line for ${start}→${end}`);
+      gameCtx.strokeStyle = "red";
+      gameCtx.lineWidth = tileSize / 10;
+      gameCtx.beginPath();
+      gameCtx.moveTo(startCoord.x, startCoord.y);
+      gameCtx.lineTo(endCoord.x, endCoord.y);
+      gameCtx.stroke();
     }
-    gameCtx.stroke();
-    gameCtx.setLineDash([]); // Reset dash pattern
-
-    // Draw snake head (triangle with eyes)
-    const angle = Math.atan2(endCoord.y - startCoord.x, endCoord.x - startCoord.x);
-    gameCtx.beginPath();
-    gameCtx.moveTo(endCoord.x, endCoord.y);
-    gameCtx.lineTo(
-      endCoord.x - (tileSize / 3) * Math.cos(angle - Math.PI / 6),
-      endCoord.y - (tileSize / 3) * Math.sin(angle - Math.PI / 6)
-    );
-    gameCtx.lineTo(
-      endCoord.x - (tileSize / 3) * Math.cos(angle + Math.PI / 6),
-      endCoord.y - (tileSize / 3) * Math.sin(angle + Math.PI / 6)
-    );
-    gameCtx.closePath();
-    gameCtx.fillStyle = "red";
-    gameCtx.fill();
-
-    // Draw eyes
-    const eyeOffset = tileSize / 8;
-    gameCtx.beginPath();
-    gameCtx.arc(
-      endCoord.x - (tileSize / 4) * Math.cos(angle - Math.PI / 6),
-      endCoord.y - (tileSize / 4) * Math.sin(angle - Math.PI / 6),
-      tileSize / 20,
-      0,
-      Math.PI * 2
-    );
-    gameCtx.arc(
-      endCoord.x - (tileSize / 4) * Math.cos(angle + Math.PI / 6),
-      endCoord.y - (tileSize / 4) * Math.sin(angle + Math.PI / 6),
-      tileSize / 20,
-      0,
-      Math.PI * 2
-    );
-    gameCtx.fillStyle = "white";
-    gameCtx.fill();
   } else {
     // Draw ladder with two parallel lines and rungs
+    gameCtx.strokeStyle = "green";
+    gameCtx.lineWidth = tileSize / 10;
     const offset = tileSize / 8; // Distance between parallel lines
     const dx = endCoord.x - startCoord.x;
     const dy = endCoord.y - startCoord.y;
@@ -206,6 +192,7 @@ function drawSnakeOrLadder(start, end, type, tileSize) {
     gameCtx.fillStyle = "green";
     gameCtx.fill();
   }
+  gameCtx.restore();
 }
 
 // Draw all players
