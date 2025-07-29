@@ -19,7 +19,7 @@ const ladders = {
 
 // Load snake image
 const snakeImage = new Image();
-snakeImage.src = 'snake.png'; // Update this path if your image is named differently or in a subdirectory (e.g., 'images/snake.png' or 'mysnake.jpg')
+snakeImage.src = 'ChatGPT Image Jul 28, 2025, 05_15_44 PM.png'; // Update this path if your image is named differently or in a subdirectory (e.g., 'images/snake.png' or 'mysnake.jpg')
 let snakeImageLoaded = false;
 snakeImage.onload = () => {
   console.log(`Snake image loaded successfully from ${snakeImage.src}`);
